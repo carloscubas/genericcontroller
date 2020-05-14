@@ -1,10 +1,8 @@
 package com.cubas.genericcontroller.controllers;
 
-import java.util.List;
-
-import com.cubas.genericcontroller.models.Response;
-import com.cubas.genericcontroller.services.ServiceInterface;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,72 +12,57 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import com.cubas.genericcontroller.dtos.PageDTO;
+import com.cubas.genericcontroller.services.ServiceInterface;
+
 public abstract class ControllerBasic<T> {
 
-    @Autowired
-    private ServiceInterface<T> service;
+	@Autowired
+	private ServiceInterface<T> service;
 
-    @GetMapping(value = "/list")
-    public ResponseEntity<Response<List<T>>> listaAll() {
-        Response<List<T>> response = new Response<>();
-        List<T> list = null;
+	@GetMapping(value = "/list")
+	public ResponseEntity<PageDTO<T>> listaAll(Pageable pageable) {
+		Page<T> list = null;
+		try {
+			list = service.findAll(pageable);
+			if (list == null) {
+				return ResponseEntity.notFound().build();
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+		return ResponseEntity.ok(new PageDTO<T>(list.getContent(), list.getSize(), list.getNumber()));
+	}
 
-        try {
-            list = service.findAll();
+	@PostMapping(value = "/new")
+	public ResponseEntity<T> create(@RequestBody T model) {
+		service.insert(model);
+		return ResponseEntity.status(HttpStatus.CREATED).build();
+	}
 
-            if (list == null) {
-                response.setStatus(HttpStatus.NOT_FOUND);
-            }else {
-                response.setContent(list);
-                response.setStatus(HttpStatus.OK);
-            }
+	@PutMapping(value = "/new")
+	public ResponseEntity<T> update(@RequestBody T model) {
+		service.update(model);
+		return ResponseEntity.status(HttpStatus.CREATED).build();
+	}
 
-        } catch (Exception e) {
-            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return new ResponseEntity<Response<List<T>>>(response, response.getStatus());
-    }
+	@GetMapping(value = "/{id}")
+	public ResponseEntity<T> get(@PathVariable("id") Long id) {
+		T T;
+		try {
+			T = service.findById(id);
+			if (T == null) {
+				return ResponseEntity.notFound().build();
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+		return ResponseEntity.ok(T);
+	}
 
-    @PostMapping(value = "/new")
-    public ResponseEntity<Response<T>> create(@RequestBody T model) {
-        Response<T> response = new Response<>();
-        service.insert(model);
-        response.setContent(model);
-        response.setStatus(HttpStatus.CREATED);
-        return new ResponseEntity<Response<T>>(response, response.getStatus());
-    }
-
-    @PutMapping(value = "/new")
-    public ResponseEntity<Response<T>> update(@RequestBody T model) {
-        Response<T> response = new Response<>();
-        service.update(model);
-        response.setContent(model);
-        response.setStatus(HttpStatus.CREATED);
-        return new ResponseEntity<Response<T>>(response, response.getStatus());
-    }
-
-    @GetMapping(value = "/{id}")
-    public ResponseEntity<Response<T>> get(@PathVariable("id") Long id) {
-        Response<T> response = new Response<T>();
-        T T;
-        try {
-            T = service.findById(id);
-            if (T == null) {
-                response.setStatus(HttpStatus.NOT_FOUND);
-            }
-            response.setContent(T);
-            response.setStatus(HttpStatus.OK);
-        } catch (Exception e) {
-            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return new ResponseEntity<Response<T>>(response, HttpStatus.OK);
-    }
-
-    @DeleteMapping(value = "/admin/{id}")
-    public ResponseEntity<Response<T>> delete(@PathVariable("id") Long id) {
-        service.delete(id);
-        Response<T> response = new Response<T>();
-        response.setStatus(HttpStatus.GONE);
-        return new ResponseEntity<Response<T>>(response, response.getStatus());
-    }
+	@DeleteMapping(value = "/admin/{id}")
+	public ResponseEntity<T> delete(@PathVariable("id") Long id) {
+		service.delete(id);
+		return ResponseEntity.status(HttpStatus.GONE).build();
+	}
 }

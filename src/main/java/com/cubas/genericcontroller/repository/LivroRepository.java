@@ -1,11 +1,11 @@
 package com.cubas.genericcontroller.repository;
 
-import java.util.List;
-
-import com.cubas.genericcontroller.models.Livro;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import com.cubas.genericcontroller.models.Livro;
 
 /**
  * @author s2it_csilva
@@ -15,7 +15,7 @@ import org.springframework.data.jpa.repository.Query;
  */
 public interface LivroRepository extends JpaRepository<Livro, Long> {
 
-	@Query(value = " from #{#entityName} l left join fetch l.autor a order by l.quantidadePaginas desc ")
-	List<Livro> listaLivros();
+	@Query(value = "from #{#entityName} l left join fetch l.autor a order by l.quantidadePaginas desc ", countQuery = "SELECT count(*) from #{#entityName} l")
+	Page<Livro> listaLivros(Pageable pageable);
 
 }
