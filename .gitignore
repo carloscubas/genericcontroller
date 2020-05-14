@@ -1,0 +1,28 @@
+logs/
+
+*.git.bkp
+
+#Eclipse
+.settings
+.classpath
+.project
+.metadata
+bin/
+
+#WebStorm e IntellijIDEA
+*.iml
+.idea/
+*.orig
+out/
+
+# Build do Gradlew
+/.gradle/
+*gradle/
+build/
+classes/
+
+newrelic/
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6e6b770bbfa56fe4db79878cf6e401957daa73b3
